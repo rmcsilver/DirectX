@@ -1,6 +1,6 @@
-#include <Windows.h>
+#include "D3DXEngine.h"
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR CmdLine, int CmdShow)
 {
-	return 1;
+	return D3DXEngine::Run(hInstance);
 }
