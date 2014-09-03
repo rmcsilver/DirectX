@@ -649,12 +649,15 @@ namespace D3DXEngine
 	};
 	const DWORD Vertex::FVF = D3DFVF_XYZ;
 
+	D3DRender::D3DRender()
+		:d3d9(0),d3dDevice(0),Triangle(0),VB(0),IB(0)
+	{
+
+	}
+
 	bool D3DRender::Init(Window &window)
 	{
 		//D3D 초기화
-		d3d9 = NULL;
-		d3dDevice = NULL; 
-		Triangle = NULL;
 		HRESULT hr = 0;
 		D3DDEVTYPE deviceType = D3DDEVTYPE_HAL;
 		HWND hWnd = window.GetHwnd();
@@ -715,11 +718,23 @@ namespace D3DXEngine
 	
 	void D3DRender::Destroy()
 	{
-		Release(d3d9);
-		Release(d3dDevice);
+		Release<IDirect3DVertexBuffer9*>(Triangle);
+		Release<IDirect3DVertexBuffer9*>(VB);
+		Release<IDirect3DIndexBuffer9*>(IB);
+
+		Release<IDirect3D9*>(d3d9);
+		Release<IDirect3DDevice9*>(d3dDevice);
 	}
 
-	bool D3DRender::Draw()
+	bool D3DRender::Draw(float timeDelta)
+	{
+//		DrawTriangle();
+		DrawCube(timeDelta);
+
+		return true;
+	}
+
+	bool D3DRender::DrawTriangle()
 	{
 		if(d3dDevice)
 		{
@@ -755,10 +770,126 @@ namespace D3DXEngine
 		D3DXMatrixPerspectiveFovLH(&proj, D3DX_PI*0.5f, (float)width/(float)height, 1.0f, 10000.0f);
 
 		d3dDevice->SetTransform(D3DTS_PROJECTION, &proj);
+		d3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
 
 		return true;
 	}
 
+	bool D3DRender::CreateCube()
+	{
+		if( d3dDevice )
+		{
+			d3dDevice->CreateVertexBuffer(8 * sizeof(Vertex), D3DUSAGE_WRITEONLY,Vertex::FVF,
+			D3DPOOL_MANAGED,&VB,0);
+
+			d3dDevice->CreateIndexBuffer(36 * sizeof(WORD),	D3DUSAGE_WRITEONLY,	D3DFMT_INDEX16,
+			D3DPOOL_MANAGED,&IB,0);
+
+			Vertex* vertices;
+			VB->Lock(0, 0, (void**)&vertices, 0);
+
+			vertices[0] = Vertex(-1.0f, -1.0f, -1.0f);
+			vertices[1] = Vertex(-1.0f,  1.0f, -1.0f);
+			vertices[2] = Vertex( 1.0f,  1.0f, -1.0f);
+			vertices[3] = Vertex( 1.0f, -1.0f, -1.0f);
+			vertices[4] = Vertex(-1.0f, -1.0f,  1.0f);
+			vertices[5] = Vertex(-1.0f,  1.0f,  1.0f);
+			vertices[6] = Vertex( 1.0f,  1.0f,  1.0f);
+			vertices[7] = Vertex( 1.0f, -1.0f,  1.0f);
+
+			VB->Unlock();
+
+			WORD* indices = 0;
+			IB->Lock(0, 0, (void**)&indices, 0);
+
+			indices[0]  = 0; indices[1]  = 1; indices[2]  = 2;
+			indices[3]  = 0; indices[4]  = 2; indices[5]  = 3;
+
+			indices[6]  = 4; indices[7]  = 6; indices[8]  = 5;
+			indices[9]  = 4; indices[10] = 7; indices[11] = 6;
+
+			indices[12] = 4; indices[13] = 5; indices[14] = 1;
+			indices[15] = 4; indices[16] = 1; indices[17] = 0;
+
+			indices[18] = 3; indices[19] = 2; indices[20] = 6;
+			indices[21] = 3; indices[22] = 6; indices[23] = 7;
+
+			indices[24] = 1; indices[25] = 5; indices[26] = 6;
+			indices[27] = 1; indices[28] = 6; indices[29] = 2;
+
+			indices[30] = 4; indices[31] = 0; indices[32] = 3;
+			indices[33] = 4; indices[34] = 3; indices[35] = 7;
+
+			IB->Unlock();
+
+			D3DXVECTOR3 position(0.0f, 0.0f, -5.0f);
+			D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
+			D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
+			D3DXMATRIX V;
+			D3DXMatrixLookAtLH(&V, &position, &target, &up);
+
+			d3dDevice->SetTransform(D3DTS_VIEW, &V);
+
+			D3DXMATRIX proj;
+			D3DXMatrixPerspectiveFovLH(
+					&proj,
+					D3DX_PI * 0.5f, // 90 - degree
+					(float)width / (float)height,
+					1.0f,
+					1000.0f);
+			d3dDevice->SetTransform(D3DTS_PROJECTION, &proj);
+
+			d3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+		}
+
+		return true;
+	}
+
+	bool D3DRender::DrawCube(float timeDelta)
+	{
+		if( d3dDevice )
+		{
+			//
+			// spin the cube:
+			//
+			D3DXMATRIX Rx, Ry;
+
+			// rotate 45 degrees on x-axis
+			D3DXMatrixRotationX(&Rx, 3.14f / 4.0f);
+
+			// incremement y-rotation angle each frame
+			static float y = 0.0f;
+			D3DXMatrixRotationY(&Ry, y);
+			y += timeDelta;
+
+			// reset angle to zero when angle reaches 2*PI
+			if( y >= 6.28f )
+				y = 0.0f;
+
+			// combine x- and y-axis rotation transformations.
+			D3DXMATRIX p = Rx * Ry;
+
+			d3dDevice->SetTransform(D3DTS_WORLD, &p);
+
+			//
+			// draw the scene:
+			//
+			d3dDevice->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0);
+			d3dDevice->BeginScene();
+
+			d3dDevice->SetStreamSource(0, VB, 0, sizeof(Vertex));
+			d3dDevice->SetIndices(IB);
+			d3dDevice->SetFVF(Vertex::FVF);
+
+			// Draw cube.
+			d3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 8, 0, 12);
+
+			d3dDevice->EndScene();
+			d3dDevice->Present(0, 0, 0, 0);
+		}
+
+		return true;
+	}
 
 	//렌더러 정의-----------------------------------------------------------------------------------/
 
@@ -812,14 +943,15 @@ namespace D3DXEngine
 
 	bool Setup()
 	{
-		render.CreateTriangle();
+	//	render.CreateTriangle();
+		render.CreateCube();
 
 		return 1;
 	}
 
 	bool Display(float timeDelta)
 	{
-		render.Draw();
+		render.Draw(timeDelta);
 
 		return 1;
 	}

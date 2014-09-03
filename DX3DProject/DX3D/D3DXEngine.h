@@ -172,15 +172,24 @@ namespace D3DXEngine
 		//»ï°¢Çü
 		IDirect3DVertexBuffer9* Triangle;
 
+		//Å¥ºê
+		IDirect3DVertexBuffer9* VB;
+		IDirect3DIndexBuffer9*  IB;
+
 		int width;
 		int height;
 
 	public:
+		D3DRender();
 		bool Init(Window&);
 		void Destroy();
-		bool Draw();
+		bool Draw(float);
 
 		bool CreateTriangle();
+		bool DrawTriangle();
+
+		bool CreateCube();
+		bool DrawCube(float);
 
 		template<class T>void Release(T t)
 		{
