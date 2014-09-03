@@ -1,10 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="EntryPoint.cpp" />
-    <ClCompile Include="D3DXEngine.cpp" />
+    <ClCompile Include="EntryPoint.cpp">
+      <Filter>엔트리포인트</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DXEngine.cpp">
+      <Filter>엔진</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3DXEngine.h" />
+    <None Include="..\..\History.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="엔트리포인트">
+      <UniqueIdentifier>{adfe0f24-b519-4760-ae9d-39dd147cddb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="엔진">
+      <UniqueIdentifier>{47f16d10-92ea-4cfb-8231-11f4bae6b3e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="로직">
+      <UniqueIdentifier>{9e7bad7d-42bd-459f-97e0-b0afad273e44}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D3DXEngine.h">
+      <Filter>엔진</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

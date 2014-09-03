@@ -8,8 +8,11 @@
 #include <d3dx9.h>
 #include <string>
 
+#define WIN32_LEAN_AND_MEAN
+
 namespace D3DXEngine
 {
+	//렌더러 선언-----------------------------------------------------------------------------/
 	class D3DRender
 	{
 	private:
@@ -17,11 +20,10 @@ namespace D3DXEngine
 		IDirect3DDevice9* d3dDevice; 
 
 	public:
-		bool Init(HINSTANCE, int, int, bool, D3DDEVTYPE);
+		bool Init(HWND, int, int, bool, D3DDEVTYPE);
 		void Destroy();
 		bool Draw(float);
 		int EnterMsgLoop();
-		static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 		template<class T>void Release(T t)
 		{
@@ -41,8 +43,60 @@ namespace D3DXEngine
 			}
 		}
 	};
+	//렌더러 선언-----------------------------------------------------------------------------/
 
-	int Create(HINSTANCE);
+	//윈도우 선언-----------------------------------------------------------------------------/
+	class Window
+	{
+	public:
+		enum ERESOLUTION
+		{
+			ERES_800X600,
+			ERES_1024X768,
+			ERES_MAX,
+		};
+
+	public:
+		Window();
+		int Init();
+		void Destroy();
+		int PopMessage(MSG&);
+	
+		LRESULT CALLBACK MessageHandler(HWND, UINT, WPARAM, LPARAM);
+
+		int InitWindows(wchar_t*, int&, int&);
+		void DestroyWindows();
+		int ChangeResolution(int);
+
+		int GetWidth(){return width;}
+		int GetHeight(){return height;}
+		HINSTANCE GetInstance() {return hInstance;}
+		HWND GetHwnd() {return hWnd;}
+	private:
+		HINSTANCE hInstance;
+		HWND hWnd;
+		wchar_t* pWcApplicationName;
+
+		int width;
+		int height;
+		bool bShowCursor;
+
+		ERESOLUTION eResolution;
+		bool bFullScreen;
+		int widths[256];
+		int heights[256];
+		int colors[256];
+		int modeCount;
+		DEVMODE devOriginalMode;
+
+	};
+
+	static Window* WindowHandle = 0;
+	static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+	//윈도우 선언-----------------------------------------------------------------------------/
+
+	int Create();
 	void Destroy();
-	int Run(HINSTANCE);
+	int Run();
 }
